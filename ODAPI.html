@@ -6,6 +6,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     #map {
       width: 100%;
@@ -64,10 +65,11 @@
       color: blue;
     }
     #search-container {
-      position: absolute;
-      top: 10px;
-      left: 500px;
-      z-index: 1000;
+        position: absolute;
+        top: 10px;
+        z-index: 1000;
+        display: flex;
+        left: 50%;
     }
     #search-box {
       padding: 5px;
@@ -83,17 +85,42 @@
       cursor: pointer;
       font-size: 14px;
     }
+    @media (max-width: 768px) {
+        #map {
+            height: 400px; /* 調整地圖高度 */
+        }
+
+        #info-panel {
+            top: auto; /* 自動調整位置 */
+            bottom: 10px; /* 放置在底部 */
+            right: 10px;
+            left: 10px;
+            width: auto; /* 自動調整寬度 */
+            max-width: 90%;
+            font-size: 10px;
+        }
+
+        #search-container {
+            top: auto;
+            bottom: 10px;
+            left: 10px;
+            width: 90%;
+        }
+        #search-box{
+            width: 70%;
+        }
+    }
   </style>
 </head>
 <body>
-  <h1>氣象站資料</h1>
+  <h1>Weather Station Map</h1>
   <div id="search-container">
     <input type="text" id="search-box" placeholder="Search station...">
     <button id="search-button">Search</button>
   </div>
   <div id="map"></div>
   <div id="info-panel">
-    <h3>綜整資料</h3>
+    <h3>Summary Data</h3>
     <table>
       <tbody id="summary-table">
       </tbody>
