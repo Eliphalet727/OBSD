@@ -178,11 +178,16 @@
     map.on(L.Draw.Event.CREATED, function (event) {
       const layer = event.layer;
 
+      // MODIFIED: Remove 5km radius check for circles
       if (layer instanceof L.Circle) {
         const center = layer.getLatLng();
         const radius = layer.getRadius();
         drawnItems.addLayer(layer);
+
+        // Optional: Add a popup to the circle
         layer.bindPopup(`Center: ${center.toString()}, Radius: ${radius.toFixed(0)} meters`);
+      } else {
+        drawnItems.addLayer(layer);
       }
       // Calculate and display distance or area
       if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
@@ -190,8 +195,8 @@
           layer.bindPopup(`Distance: ${distance.toFixed(2)} meters`).openPopup();
       } else if (layer instanceof L.Polygon) {
           const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
-          const areaKm2 = area / 1000000;
-          layer.bindPopup(`Area: ${areaKm2.toFixed(2)} km²`).openPopup();
+          const areaKm2 = area / 1000000; // MODIFIED: Convert to km²
+          layer.bindPopup(`Area: ${areaKm2.toFixed(2)} km²`).openPopup(); // MODIFIED: Display in km²
       }
     });
 
