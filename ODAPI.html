@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet Map with Temperature, Humidity, and Search Bar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <style>
+    #map {
+      width: 100%;
+      height: 900px;
+    }
+    #info-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: white;
+      border: 1px solid black;
+      padding: 10px;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      font-size: 12px; /* Reduced font size */
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      max-width: 350px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 3px; /* Reduced padding */
+      text-align: left;
+      word-wrap: break-word;
+    }
+    th {
+      background-color: #f0f0f0;
+      width: 40%;
+    }
+    td {
+      width: 60%;
+    }
+    .temperature-label {
+      font-weight: bold;
+      font-size: 12px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 2px 4px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      text-align: center;
+    }
+    .temperature-label.armts {
+      color: red;
+    }
+    .temperature-label.meso {
+      color: orange;
+    }
+    .label-line {
+      display: block;
+      white-space: nowrap;
+    }
+    .label-line.humidity {
+      color: blue;
+    }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+    }
+    #search-box {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    #search-button {
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Station Map</h1>
+  <div id="search-container">
+    <input type="text" id="search-box" placeholder="Search station...">
+    <button id="search-button">Search</button>
+  </div>
+  <div id="map"></div>
+  <div id="info-panel">
+    <h3>Summary Data</h3>
+    <table>
+      <tbody id="summary-table">
+      </tbody>
+    </table>
+  </div>
+  <script>
+    // 初始化地圖
+    const map = L.map('map').setView([23.6, 121], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Feature group for drawn items
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+You are absolutely right! I apologize for the error. In the previous corrections, I mistakenly told you to add the drawnItems.addLayer(layer); and the distance/area calculation code inside another map.on(L.Draw.Event.CREATED, ...) listener. This was incorrect and caused the original listener for these events to be overridden, thus making the polyline and polygon tools disappear and the circle drawing not work.
+
+Here's how to fix it correctly:
+
+1. Remove the duplicated map.on(L.Draw.Event.CREATED, ...) listener:
+
+You should remove the second map.on(L.Draw.Event.CREATED, ...) listener that was added in the previous response. This is the one that contains the if (!(layer instanceof L.Circle)) condition and the distance/area calculations.
+
+2. Keep only the first map.on(L.Draw.Event.CREATED, ...) listener:
+
+You should keep the first map.on(L.Draw.Event.CREATED, ...) listener. This listener should only handle the circle creation and validation logic. It should be modified to only include the code for handling circles and adding them if they are valid, but remove the logic for adding other shapes.
+
+Here's the corrected code for these two parts:
+
+JavaScript
+
+    // Event listener for when a shape is created
+    map.on(L.Draw.Event.CREATED, function (event) {
+      const layer = event.layer;
+
+      if (layer instanceof L.Circle) {
+        const center = layer.getLatLng();
+        const radius = layer.getRadius();
+
+        // Check if the circle is approximately 5km in radius
+        if (radius >= 4900 && radius <= 5100) { // Allow a small tolerance
+            drawnItems.addLayer(layer);
+
+            // Optional: Add a popup to the circle
+            layer.bindPopup(`Center: ${center.toString()}, Radius: ${radius.toFixed(0)} meters`);
+        } else {
+            alert("Please draw a circle with a radius of approximately 5 kilometers.");
+        }
+      } else {
+        drawnItems.addLayer(layer);
+      }
+    });
+3. Restore the original code for handling other shapes:
+After the code above, restore the original code for handling other shapes (polyline, polygon, etc.):
+
+JavaScript
+
+    // Calculate and display distance or area
+    if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+        const distance = layer.getDistance();
+        layer.bindPopup(`Distance: ${distance.toFixed(2)} meters`).openPopup();
+    } else if (layer instanceof L.Polygon) {
+        const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+        const areaKm2 = area / 1000000;
+        layer.bindPopup(`Area: ${areaKm2.toFixed(2)} km²`).openPopup();
+    }
+Complete Corrected Code:
+
+For clarity, here's the complete corrected code with all the changes in the correct places:
+
+HTML
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet Map with Temperature, Humidity, and Search Bar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  <style>
+    #map {
+      width: 100%;
+      height: 900px;
+    }
+    #info-panel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: white;
+      border: 1px solid black;
+      padding: 10px;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      font-size: 12px; /* Reduced font size */
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      max-width: 350px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 3px; /* Reduced padding */
+      text-align: left;
+      word-wrap: break-word;
+    }
+    th {
+      background-color: #f0f0f0;
+      width: 40%;
+    }
+    td {
+      width: 60%;
+    }
+    .temperature-label {
+      font-weight: bold;
+      font-size: 12px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 2px 4px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      text-align: center;
+    }
+    .temperature-label.armts {
+      color: red;
+    }
+    .temperature-label.meso {
+      color: orange;
+    }
+    .label-line {
+      display: block;
+      white-space: nowrap;
+    }
+    .label-line.humidity {
+      color: blue;
+    }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+    }
+    #search-box {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    #search-button {
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Station Map</h1>
+  <div id="search-container">
+    <input type="text" id="search-box" placeholder="Search station...">
+    <button id="search-button">Search</button>
+  </div>
+  <div id="map"></div>
+  <div id="info-panel">
+    <h3>Summary Data</h3>
+    <table>
+      <tbody id="summary-table">
+      </tbody>
+    </table>
+  </div>
+  <script>
+    // 初始化地圖
+    const map = L.map('map').setView([23.6, 121], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Feature group for drawn items
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    // Leaflet Draw configuration
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polyline: {
+          shapeOptions: {
+            color: 'blue',
+            weight: 4,
+            opacity: 0.7
+          },
+          metric: true,
+          feet: false,
+          showLength: true,
+          showMeasurements: true,
+          tooltip: {
+            start: 'Click to start measuring',
+            cont: 'Click to continue measuring',
+            end: 'Click last point to finish'
+          }
+        },
+        polygon: {
+          allowIntersection: false,
+          drawError: {
+            color: 'red',
+            message: 'Cannot intersect polygons!'
+          },
+          shapeOptions: {
+            color: 'green',
+            weight: 4,
+            opacity: 0.5
+          },
+          showArea: true,
+          showMeasurements: true,
+          metric: true,
+          tooltip: {
+            start: 'Click to start drawing shape',
+            cont: 'Click to continue drawing shape',
+            end: 'Click first point to close this shape'
+          }
+        },
+        circle: { // ADDED
+          shapeOptions: {
+            color: 'red',
+            weight: 4,
+            opacity: 0.5
+          },
+          showRadius: true,
+          metric: true,
+          feet: false,
+          tooltip: {
+            start: 'Click and drag to draw a circle',
+          }
+        },
+        rectangle: false,
+        marker: false,
+        circlemarker: false
+      },
+      edit: {
+        featureGroup: drawnItems,
+        remove: true
+      }
+    });
+    map.addControl(drawControl);
+
+    // Event listener for when a shape is created
+    map.on(L.Draw.Event.CREATED, function (event) {
+      const layer = event.layer;
+
+      if (layer instanceof L.Circle) {
+        const center = layer.getLatLng();
+        const radius = layer.getRadius();
+        drawnItems.addLayer(layer);
+
+        // Optional: Add a popup to the circle
+        layer.bindPopup(`Center: ${center.toString()}, Radius: ${radius.toFixed(0)} meters`);
+      } else {
+        drawnItems.addLayer(layer);
+      }
+      // Calculate and display distance or area
+      if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
+          const distance = layer.getDistance();
+          layer.bindPopup(`Distance: ${distance.toFixed(2)} meters`).openPopup();
+      } else if (layer instanceof L.Polygon) {
+          const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+          const areaKm2 = area / 1000000;
+          layer.bindPopup(`Area: ${areaKm2.toFixed(2)} km²`).openPopup();
+      }
+    });
+
+    // Polyline distance calculation method
+    L.Polyline.prototype.getDistance = function() {
+        let totalDistance = 0;
+        for (let i = 0; i < this._latlngs.length - 1; i++) {
+            totalDistance += this._latlngs[i].distanceTo(this._latlngs[i + 1]);
+        }
+        return totalDistance;
+    };
+
+
+    // Global variables to hold data
+    let armtsData = {};
+    let mesoData = {};
+    let allStationData = []; // Array to store all station data for searching // ADDED
+
+    // Fetch and process ARMTS data
+    async function fetchArmtsData() {
+      try {
+        const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=rdec-key-123-45678-011121314&format=JSON'); // **請替換成你的 API KEY**
+        const data = await response.json();
+
+        if (data.success === "true") {
+          const stations = data.records.Station;
+          let highestTemp = -Infinity;
+          let lowestTemp = Infinity;
+          let highestTempStations = [];
+          let lowestTempStations = [];
+          let highestHumidity = -Infinity;
+          let lowestHumidity = Infinity;
+          let highestHumidityStations = [];
+          let lowestHumidityStations = [];
+          let missingDataStations = [];
+          let highestTempTime = "";
+          let lowestTempTime = "";
+          let highestHumidityTime = "";
+          let lowestHumidityTime = "";
+          let observationTime = "";
+
+          stations.forEach(station => {
+            const stationData = {
+              StationName: station.StationName,
+              StationId: station.StationId,
+              ObsTime: station.ObsTime.DateTime,
+              AirTemperature: parseFloat(station.WeatherElement.AirTemperature),
+              RelativeHumidity: parseFloat(station.WeatherElement.RelativeHumidity),
+              Latitude: parseFloat(station.GeoInfo.Coordinates[0].StationLatitude),
+              Longitude: parseFloat(station.GeoInfo.Coordinates[0].StationLongitude)
+            };
+
+            // Add station data to the allStationData array
+            allStationData.push(stationData); // ADDED
+
+            if (stationData.AirTemperature === -99 || stationData.RelativeHumidity === -99) {
+              missingDataStations.push(stationData.StationName);
+            }
+
+            if (stationData.AirTemperature !== -99) {
+              if (stationData.AirTemperature > highestTemp) {
+                highestTemp = stationData.AirTemperature;
+                highestTempStations = [stationData.StationName];
+                highestTempTime = stationData.ObsTime;
+              } else if (stationData.AirTemperature === highestTemp) {
+                highestTempStations.push(stationData.StationName);
+              }
+
+              if (stationData.AirTemperature < lowestTemp) {
+                lowestTemp = stationData.AirTemperature;
+                lowestTempStations = [stationData.StationName];
+                lowestTempTime = stationData.ObsTime;
+              } else if (stationData.AirTemperature === lowestTemp) {
+                lowestTempStations.push(stationData.StationName);
+              }
+            }
+
+            if(stationData.RelativeHumidity !== -99){
+              if (stationData.RelativeHumidity > highestHumidity) {
+                highestHumidity = stationData.RelativeHumidity;
+                highestHumidityStations = [stationData.StationName];
+                highestHumidityTime = stationData.ObsTime;
+              } else if (stationData.RelativeHumidity === highestHumidity) {
+                highestHumidityStations.push(stationData.StationName);
+              }
+              if (stationData.RelativeHumidity < lowestHumidity) {
+                lowestHumidity = stationData.RelativeHumidity;
+                lowestHumidityStations = [stationData.StationName];
+                lowestHumidityTime = stationData.ObsTime;
+              } else if (stationData.RelativeHumidity === lowestHumidity) {
+                lowestHumidityStations.push(stationData.StationName);
+              }
+            }
+
+            if (observationTime === "") {
+              observationTime = stationData.ObsTime;
+            }
+
+            const marker = L.marker([stationData.Latitude, stationData.Longitude]).addTo(map);
+
+            // Correctly display station ID in the label (Removed extra curly braces)
+            const tempLabel = L.divIcon({
+              className: 'temperature-label armts',
+              html: `<span class="label-line">${stationData.StationName} (${stationData.StationId})</span><span class="label-line">${stationData.AirTemperature} °C</span><span class="label-line humidity">濕度: ${stationData.RelativeHumidity}%</span>`,
+              iconSize: [100, 60],
+              iconAnchor: [50, 30]
+            });
+
+            L.marker([stationData.Latitude, stationData.Longitude], { icon: tempLabel }).addTo(map);
+          });
+
+          if (lowestTemp === Infinity) {
+            lowestTemp = "N/A";
+            lowestTempStations = ["N/A"];
+          }
+
+          if (highestHumidity === -Infinity) {
+            highestHumidity = "N/A";
+            highestHumidityStations = ["N/A"];
+            highestHumidityTime = "N/A";
+          }
+
+          if (lowestHumidity === Infinity) {
+            lowestHumidity = "N/A";
+            lowestHumidityStations = ["N/A"];
+            lowestHumidityTime = "N/A";
+          }
+
+          // Store ARMTS data in global variable
+          armtsData = {
+            stationCount: stations.length,
+            highestTemp: highestTemp === -Infinity ? "N/A" : highestTemp,
+            highestTempStations,
+            lowestTemp: lowestTemp,
+            lowestTempStations,
+            highestTempTime: highestTempTime,
+            lowestTempTime: lowestTempTime,
+            highestHumidity: highestHumidity,
+            highestHumidityStations,
+            lowestHumidity: lowestHumidity,
+            lowestHumidityStations,
+            highestHumidityTime: highestHumidityTime,
+            lowestHumidityTime: lowestHumidityTime,
+            missingDataStations: missingDataStations.length === 0 ? "N/A" : missingDataStations.join(", "),
+            observationTime
+          };
+
+          // Update the table after both ARMTS and MESO data are fetched
+          if (mesoData.stationCount !== undefined) {
+            updateSummaryTable();
+          }
+
+        } else {
+          console.error("ARMTS API response failed:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching ARMTS data:", error);
+      }
+    }
+
+// Fetch and process MESO data
+    async function fetchMesoData() {
+      try {
+        const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=rdec-key-123-45678-011121314&format=JSON'); // **請替換成你的 API KEY**
+        const data = await response.json();
+
+        if (data.success === "true") {
+          const stations = data.records.Station;
+          let highestTemp = -Infinity;
+          let lowestTemp = Infinity;
+          let highestTempStations = [];
+          let lowestTempStations = [];
+          let highestHumidity = -Infinity;
+          let lowestHumidity = Infinity;
+          let highestHumidityStations = [];
+          let lowestHumidityStations = [];
+          let missingDataStations = [];
+          let highestTempTime = "";
+          let lowestTempTime = "";
+          let highestHumidityTime = "";
+          let lowestHumidityTime = "";
+          let observationTime = "";
+
+          stations.forEach(station => {
+            const stationData = {
+              StationName: station.StationName,
+              StationId: station.StationId,
+              ObsTime: station.ObsTime.DateTime,
+              AirTemperature: parseFloat(station.WeatherElement.AirTemperature),
+              RelativeHumidity: parseFloat(station.WeatherElement.RelativeHumidity),
+              Latitude: parseFloat(station.GeoInfo.Coordinates[0].StationLatitude),
+              Longitude: parseFloat(station.GeoInfo.Coordinates[0].StationLongitude)
+            };
+
+            // Add station data to the allStationData array
+            allStationData.push(stationData);
+
+            // Check for missing or invalid data
+            if ((stationData.AirTemperature === -99 || isNaN(stationData.AirTemperature)) || (stationData.RelativeHumidity === -99 || isNaN(stationData.RelativeHumidity))) {
+              missingDataStations.push(stationData.StationName);
+            }
+
+            // Process AirTemperature if valid
+            if (stationData.AirTemperature !== -99 && !isNaN(stationData.AirTemperature)) {
+              if (stationData.AirTemperature > highestTemp) {
+                highestTemp = stationData.AirTemperature;
+                highestTempStations = [stationData.StationName];
+                highestTempTime = stationData.ObsTime;
+              } else if (stationData.AirTemperature === highestTemp) {
+                highestTempStations.push(stationData.StationName);
+              }
+
+              if (stationData.AirTemperature < lowestTemp) {
+                lowestTemp = stationData.AirTemperature;
+                lowestTempStations = [stationData.StationName];
+                lowestTempTime = stationData.ObsTime;
+              } else if (stationData.AirTemperature === lowestTemp) {
+                lowestTempStations.push(stationData.StationName);
+              }
+            }
+            // Process RelativeHumidity if valid
+            if (stationData.RelativeHumidity !== -99 && !isNaN(stationData.RelativeHumidity)) {
+              if (stationData.RelativeHumidity > highestHumidity) {
+                highestHumidity = stationData.RelativeHumidity;
+                highestHumidityStations = [stationData.StationName];
+                highestHumidityTime = stationData.ObsTime;
+              } else if (stationData.RelativeHumidity === highestHumidity) {
+                highestHumidityStations.push(stationData.StationName);
+              }
+
+              if (stationData.RelativeHumidity < lowestHumidity) {
+                lowestHumidity = stationData.RelativeHumidity;
+                lowestHumidityStations = [stationData.StationName];
+                lowestHumidityTime = stationData.ObsTime;
+              } else if (stationData.RelativeHumidity === lowestHumidity) {
+                lowestHumidityStations.push(stationData.StationName);
+              }
+            }
+
+            if (observationTime === "") {
+              observationTime = stationData.ObsTime;
+            }
+
+            const marker = L.marker([stationData.Latitude, stationData.Longitude]).addTo(map);
+
+            // Correctly display station ID in the label
+            const tempLabel = L.divIcon({
+              className: 'temperature-label meso',
+              html: `<span class="label-line">${stationData.StationName} (${stationData.StationId})</span><span class="label-line">${stationData.AirTemperature} °C</span><span class="label-line humidity">濕度: ${stationData.RelativeHumidity}%</span>`,
+              iconSize: [100, 60],
+              iconAnchor: [50, 30]
+            });
+
+            L.marker([stationData.Latitude, stationData.Longitude], { icon: tempLabel }).addTo(map);
+          });
+
+          if (lowestTemp === Infinity) {
+            lowestTemp = "N/A";
+            lowestTempStations = ["N/A"];
+            lowestTempTime = "N/A";
+          }
+
+          if (highestHumidity === -Infinity) {
+            highestHumidity = "N/A";
+            highestHumidityStations = ["N/A"];
+            highestHumidityTime = "N/A";
+          }
+
+          if (lowestHumidity === Infinity) {
+            lowestHumidity = "N/A";
+            lowestHumidityStations = ["N/A"];
+            lowestHumidityTime = "N/A";
+          }
+
+          // Store MESO data in global variable
+          mesoData = {
+            stationCount: stations.length,
+            highestTemp: highestTemp === -Infinity ? "N/A" : highestTemp,
+            highestTempStations,
+            lowestTemp: lowestTemp,
+            lowestTempStations,
+            highestTempTime: highestTempTime,
+            lowestTempTime: lowestTempTime,
+            highestHumidity: highestHumidity,
+            highestHumidityStations,
+            lowestHumidity: lowestHumidity,
+            lowestHumidityStations,
+            highestHumidityTime: highestHumidityTime,
+            lowestHumidityTime: lowestHumidityTime,
+            missingDataStations: missingDataStations.length === 0 ? "N/A" : missingDataStations.join(", "),
+            observationTime
+          };
+
+          // Update the table after both ARMTS and MESO data are fetched
+          if (armtsData.stationCount !== undefined) {
+            updateSummaryTable();
+          }
+
+        } else {
+          console.error("MESO API response failed:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching MESO data:", error);
+      }
+    }
+
+  // Function to update the summary table (RESTORED)
+    function updateSummaryTable() {
+      const summaryTable = document.getElementById('summary-table');
+      summaryTable.innerHTML = `
+        <tr>
+          <th>Station Count (ARMTS)</th>
+          <td>${armtsData.stationCount}</td>
+        </tr>
+        <tr>
+          <th>Highest Temperature (ARMTS)</th>
+          <td>${armtsData.highestTemp} °C (${armtsData.highestTempStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Highest Temperature Time (ARMTS)</th>
+          <td>${armtsData.highestTempTime}</td>
+        </tr>
+        <tr>
+          <th>Lowest Temperature (ARMTS)</th>
+          <td>${armtsData.lowestTemp} °C (${armtsData.lowestTempStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Lowest Temperature Time (ARMTS)</th>
+          <td>${armtsData.lowestTempTime}</td>
+        </tr>
+        <tr>
+          <th>Highest Humidity (ARMTS)</th>
+          <td>${armtsData.highestHumidity}% (${armtsData.highestHumidityStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Highest Humidity Time (ARMTS)</th>
+          <td>${armtsData.highestHumidityTime}</td>
+        </tr>
+        <tr>
+          <th>Lowest Humidity (ARMTS)</th>
+          <td>${armtsData.lowestHumidity}% (${armtsData.lowestHumidityStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Lowest Humidity Time (ARMTS)</th>
+          <td>${armtsData.lowestHumidityTime}</td>
+        </tr>
+        <tr>
+          <th>Missing Data (ARMTS)</th>
+          <td>${armtsData.missingDataStations}</td>
+        </tr>
+        <tr>
+          <th>Observation Time (ARMTS)</th>
+          <td>${armtsData.observationTime}</td>
+        </tr>
+        <tr>
+          <th>Station Count (MESO)</th>
+          <td>${mesoData.stationCount}</td>
+        </tr>
+        <tr>
+          <th>Highest Temperature (MESO)</th>
+          <td>${mesoData.highestTemp} °C (${mesoData.highestTempStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Highest Temperature Time (MESO)</th>
+          <td>${mesoData.highestTempTime}</td>
+        </tr>
+        <tr>
+          <th>Lowest Temperature (MESO)</th>
+          <td>${mesoData.lowestTemp} °C (${mesoData.lowestTempStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Lowest Temperature Time (MESO)</th>
+          <td>${mesoData.lowestTempTime}</td>
+        </tr>
+        <tr>
+          <th>Highest Humidity (MESO)</th>
+          <td>${mesoData.highestHumidity}% (${mesoData.highestHumidityStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Highest Humidity Time (MESO)</th>
+          <td>${mesoData.highestHumidityTime}</td>
+        </tr>
+        <tr>
+          <th>Lowest Humidity (MESO)</th>
+          <td>${mesoData.lowestHumidity}% (${mesoData.lowestHumidityStations.join(', ')})</td>
+        </tr>
+        <tr>
+          <th>Lowest Humidity Time (MESO)</th>
+          <td>${mesoData.lowestHumidityTime}</td>
+        </tr>
+        <tr>
+          <th>Missing Data (MESO)</th>
+          <td>${mesoData.missingDataStations}</td>
+        </tr>
+        <tr>
+          <th>Observation Time (MESO)</th>
+          <td>${mesoData.observationTime}</td>
+        </tr>
+      `;
+    }
+
+    // Search functionality (RESTORED)
+    document.getElementById('search-button').addEventListener('click', function() {
+      const searchTerm = document.getElementById('search-box').value.toLowerCase();
+      const matchingStation = allStationData.find(station =>
+        station.StationName.toLowerCase().includes(searchTerm) || station.StationId.toLowerCase().includes(searchTerm)
+      );
+
+      if (matchingStation) {
+        map.setView([matchingStation.Latitude, matchingStation.Longitude], 14); // Zoom in to the station
+      } else {
+        alert("Station not found.");
+      }
+    });
+
+    // Call both data fetching functions
+    fetchArmtsData(); // ADDED
+    fetchMesoData(); // ADDED
+  </script>
+</body>
+</html>
