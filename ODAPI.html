@@ -66,10 +66,10 @@
     }
     #search-container {
         position: absolute;
-        top: 10px;
+        top: 40px;
         z-index: 1000;
         display: flex;
-        left: 50%;
+        left: 200px;
     }
     #search-box {
       padding: 5px;
@@ -109,23 +109,33 @@
         #search-box{
             width: 70%;
         }
+        #summary-table-container {
+        display: none;
+        }
+
+        #toggle-summary{
+        margin-bottom: 5px;
+        }
     }
   </style>
 </head>
 <body>
-  <h1>Weather Station Map</h1>
+  <h1>氣象站資料</h1>
   <div id="search-container">
     <input type="text" id="search-box" placeholder="Search station...">
     <button id="search-button">Search</button>
   </div>
   <div id="map"></div>
-  <div id="info-panel">
-    <h3>Summary Data</h3>
-    <table>
-      <tbody id="summary-table">
-      </tbody>
-    </table>
-  </div>
+<div id="info-panel">
+    <h3>綜整資料</h3>
+    <button id="toggle-summary">Show/Hide</button>
+    <div id="summary-table-container">
+      <table>
+        <tbody id="summary-table">
+        </tbody>
+      </table>
+    </div>
+</div>
   <script>
     // 初始化地圖
     const map = L.map('map').setView([23.6, 121], 7);
@@ -205,7 +215,6 @@
     map.on(L.Draw.Event.CREATED, function (event) {
       const layer = event.layer;
 
-      // MODIFIED: Remove 5km radius check for circles
       if (layer instanceof L.Circle) {
         const center = layer.getLatLng();
         const radius = layer.getRadius();
@@ -623,6 +632,16 @@
         </tr>
       `;
     }
+
+    // Toggle summary table visibility
+    document.getElementById('toggle-summary').addEventListener('click', function() {
+    const summaryTableContainer = document.getElementById('summary-table-container');
+    if (summaryTableContainer.style.display === 'none') {
+        summaryTableContainer.style.display = 'block';
+    } else {
+        summaryTableContainer.style.display = 'none';
+    }
+    });
 
     // Search functionality
     document.getElementById('search-button').addEventListener('click', function() {
