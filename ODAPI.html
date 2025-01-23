@@ -12,7 +12,7 @@
       width: 100%;
       height: 900px;
     }
-    #info-panel {
+     #info-panel {
       position: absolute;
       top: 10px;
       right: 10px;
@@ -65,11 +65,11 @@
       color: blue;
     }
     #search-container {
-        position: absolute;
-        top: 40px;
-        z-index: 1000;
-        display: flex;
-        left: 200px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center; /* 水平置中 */
+      margin-top: 10px; /* 與上方文字的間距 */
+      margin-bottom: 10px; /* 與地圖的間距 */
     }
     #search-box {
       padding: 5px;
@@ -87,36 +87,33 @@
     }
     @media (max-width: 768px) {
         #map {
-            height: 700px; /* 調整地圖高度 */
+            height: 600px; /* 可調整的預設高度 */
         }
 
         #info-panel {
-            top: auto; /* 自動調整位置 */
-            bottom: 10px; /* 放置在底部 */
+            top: auto;
+            bottom: 10px;
             right: 10px;
             left: 10px;
-            width: auto; /* 自動調整寬度 */
+            width: auto;
             max-width: 90%;
             font-size: 10px;
         }
 
         #search-container {
-            top: auto;
-            bottom: 10px; /* 保持底部距離 */
-            left: 10px;   /* 新增：設定左邊距離 */
-            width: 90%; /* 新增：調整容器寬度 */
-            display: flex; /* 使用flex佈局 */
-            justify-content: center;/* 新增：調整水平對齊 */
+            width: 90%; /* 或你想要的寬度 */
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
         #search-box{
-            width: 70%; /* 保留原本的設定 */
+            width: 70%;
         }
         #summary-table-container {
-        display: none;
+            display: none;
         }
 
         #toggle-summary{
-        margin-bottom: 5px;
+            margin-bottom: 5px;
         }
     }
   </style>
