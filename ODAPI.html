@@ -87,7 +87,7 @@
     }
     @media (max-width: 768px) {
         #map {
-            height: 400px; /* 調整地圖高度 */
+            height: 700px; /* 調整地圖高度 */
         }
 
         #info-panel {
@@ -102,12 +102,14 @@
 
         #search-container {
             top: auto;
-            bottom: 10px;
-            left: 10px;
-            width: 90%;
+            bottom: 10px; /* 保持底部距離 */
+            left: 10px;   /* 新增：設定左邊距離 */
+            width: 90%; /* 新增：調整容器寬度 */
+            display: flex; /* 使用flex佈局 */
+            justify-content: center;/* 新增：調整水平對齊 */
         }
         #search-box{
-            width: 70%;
+            width: 70%; /* 保留原本的設定 */
         }
         #summary-table-container {
         display: none;
