@@ -68,7 +68,7 @@ function generateLabelContent(station) {
   let past1hr = (station.Past1hrPrecipitation !== null) ? station.Past1hrPrecipitation : "N/A";
   return `${station.StationName} (${station.StationId})<br>
           ${station.AirTemperature}°C, ${station.RelativeHumidity}%<br>
-          日累積雨量: ${nowPrecip} mm, 過去1小時: ${past1hr} mm`;
+          日累積雨量: ${nowPrecip} mm, 過去1小時雨量: ${past1hr} mm`;
 }
 
 function generateRainfallPopupContent(station) {
