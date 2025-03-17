@@ -410,13 +410,9 @@ function renderArmtsSummary() {
     <table border="1" style="border-collapse: collapse; width: 100%;">
       <tr><th>測站數量</th><td>${armtsData.stationCount}</td></tr>
       <tr><th>最高溫度</th><td>${armtsData.highestTemp} °C (${armtsData.highestTempStations.join(', ')})</td></tr>
-      // <tr><th>最高溫度時間</th><td>${armtsData.highestTempTime}</td></tr>
       <tr><th>最低溫度</th><td>${armtsData.lowestTemp} °C (${armtsData.lowestTempStations.join(', ')})</td></tr>
-      // <tr><th>最低溫度時間</th><td>${armtsData.lowestTempTime}</td></tr>
       <tr><th>最高濕度</th><td>${armtsData.highestHumidity}% (${armtsData.highestHumidityStations.join(', ')})</td></tr>
-      // <tr><th>最高濕度時間</th><td>${armtsData.highestHumidityTime}</td></tr>
       <tr><th>最低濕度</th><td>${armtsData.lowestHumidity}% (${armtsData.lowestHumidityStations.join(', ')})</td></tr>
-      // <tr><th>最低濕度時間</th><td>${armtsData.lowestHumidityTime}</td></tr>
       <tr><th>資料缺失</th><td>${armtsData.missingDataStations}</td></tr>
       <tr><th>觀測時間</th><td>${armtsData.observationTime}</td></tr>
     </table>
@@ -428,13 +424,9 @@ function renderMesoSummary() {
     <table border="1" style="border-collapse: collapse; width: 100%;">
       <tr><th>測站數量</th><td>${mesoData.stationCount}</td></tr>
       <tr><th>最高溫度</th><td>${mesoData.highestTemp} °C (${mesoData.highestTempStations.join(', ')})</td></tr>
-      // <tr><th>最高溫度時間</th><td>${mesoData.highestTempTime}</td></tr>
       <tr><th>最低溫度</th><td>${mesoData.lowestTemp} °C (${mesoData.lowestTempStations.join(', ')})</td></tr>
-      // <tr><th>最低溫度時間</th><td>${mesoData.lowestTempTime}</td></tr>
       <tr><th>最高濕度</th><td>${mesoData.highestHumidity}% (${mesoData.highestHumidityStations.join(', ')})</td></tr>
-      // <tr><th>最高濕度時間</th><td>${mesoData.highestHumidityTime}</td></tr>
       <tr><th>最低濕度</th><td>${mesoData.lowestHumidity}% (${mesoData.lowestHumidityStations.join(', ')})</td></tr>
-      // <tr><th>最低濕度時間</th><td>${mesoData.lowestHumidityTime}</td></tr>
       <tr><th>資料缺失</th><td>${mesoData.missingDataStations}</td></tr>
       <tr><th>觀測時間</th><td>${mesoData.observationTime}</td></tr>
     </table>
