@@ -1,3 +1,28 @@
+const redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+const orangeIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+const blueIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 let allStations = {};
 
 const map = L.map('map').setView([25.0376, 121.5148], 15);
@@ -20,7 +45,6 @@ const drawControl = new L.Control.Draw({
   edit: { featureGroup: drawnItems, remove: true }
 });
 map.addControl(drawControl);
-
 map.on(L.Draw.Event.CREATED, function (event) {
   const layer = event.layer;
   drawnItems.addLayer(layer);
@@ -51,7 +75,7 @@ const rainfallLayer = L.layerGroup().addTo(map);
 
 let armtsStations = [], mesoStations = [], rainfallStations = [];
 let armtsData = {}, mesoData = {}, rainfallData = {};
-const stationMarkers = {};
+const stationMarkers = {}; 
 
 function generatePopupContent(station) {
   let nowPrecip = (station.NowPrecipitation !== null) ? station.NowPrecipitation : "N/A";
@@ -68,7 +92,7 @@ function generateLabelContent(station) {
   let past1hr = (station.Past1hrPrecipitation !== null) ? station.Past1hrPrecipitation : "N/A";
   return `${station.StationName} (${station.StationId})<br>
           ${station.AirTemperature}°C, ${station.RelativeHumidity}%<br>
-          日累積雨量: ${nowPrecip} mm, 過去1小時雨量: ${past1hr} mm`;
+          日: ${nowPrecip} mm, 1小時: ${past1hr} mm`;
 }
 
 function generateRainfallPopupContent(station) {
@@ -164,7 +188,7 @@ async function fetchArmtsData() {
         if (!observationTime) {
           observationTime = stationData.ObsTime;
         }
-        const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+        const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: redIcon });
         marker.bindPopup(generatePopupContent(stationData));
         marker.bindTooltip(generateLabelContent(stationData), {
           permanent: true,
@@ -272,7 +296,7 @@ async function fetchMesoData() {
           }
         }
         if (!observationTime) { observationTime = stationData.ObsTime; }
-        const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+        const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: orangeIcon });
         marker.bindPopup(generatePopupContent(stationData));
         marker.bindTooltip(generateLabelContent(stationData), {
           permanent: true,
@@ -375,7 +399,7 @@ async function fetchRainfallData() {
         }
         if (!observationTime) { observationTime = stationData.ObsTime; }
         if (!stationMarkers[stationData.StationId]) {
-          const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+          const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: blueIcon });
           marker.bindPopup(generateRainfallPopupContent(stationData));
           marker.bindTooltip(generateLabelContent(stationData), {
             permanent: true,
@@ -541,7 +565,6 @@ document.getElementById('toggle-rainfall').addEventListener('change', function()
   if (this.checked) { map.addLayer(rainfallLayer); }
   else { map.removeLayer(rainfallLayer); }
 });
-
 document.getElementById('toggle-labels').addEventListener('change', function() {
   updateLabelsVisibility(this.checked);
 });
