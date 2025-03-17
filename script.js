@@ -1,3 +1,5 @@
+let allStations = {};
+
 const map = L.map('map').setView([25.0376, 121.5148], 15);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
@@ -49,7 +51,7 @@ const rainfallLayer = L.layerGroup().addTo(map);
 
 let armtsStations = [], mesoStations = [], rainfallStations = [];
 let armtsData = {}, mesoData = {}, rainfallData = {};
-const stationMarkers = {}; 
+const stationMarkers = {};
 
 function generatePopupContent(station) {
   let nowPrecip = (station.NowPrecipitation !== null) ? station.NowPrecipitation : "N/A";
@@ -66,13 +68,31 @@ function generateLabelContent(station) {
   let past1hr = (station.Past1hrPrecipitation !== null) ? station.Past1hrPrecipitation : "N/A";
   return `${station.StationName} (${station.StationId})<br>
           ${station.AirTemperature}°C, ${station.RelativeHumidity}%<br>
-          日累積雨量: ${nowPrecip} mm, 過去1小時雨量: ${past1hr} mm`;
+          日累積雨量: ${nowPrecip} mm, 過去1小時: ${past1hr} mm`;
 }
 
 function generateRainfallPopupContent(station) {
   return `<strong>${station.StationName} (${station.StationId})</strong><br>
           日累積雨量: ${station.NowPrecipitation} mm<br>
           過去1小時雨量: ${station.Past1hrPrecipitation} mm`;
+}
+
+function updateLabelsVisibility(visible) {
+  for (const stationId in stationMarkers) {
+    const marker = stationMarkers[stationId];
+    const station = allStations[stationId];
+    if (!marker || !station) continue;
+    if (visible) {
+      marker.bindTooltip(generateLabelContent(station), {
+        permanent: true,
+        direction: "top",
+        offset: [0, -20],
+        className: "label-tooltip"
+      });
+    } else {
+      marker.unbindTooltip();
+    }
+  }
 }
 
 async function fetchArmtsData() {
@@ -104,6 +124,7 @@ async function fetchArmtsData() {
           Source: 'ARMTS'
         };
         armtsStations.push(stationData);
+        allStations[stationData.StationId] = stationData;
 
         if (stationData.AirTemperature === -99 || stationData.RelativeHumidity === -99) {
           missingDataStations.push(stationData.StationName);
@@ -213,6 +234,7 @@ async function fetchMesoData() {
           Source: 'MESO'
         };
         mesoStations.push(stationData);
+        allStations[stationData.StationId] = stationData;
 
         if (stationData.AirTemperature === -99 || stationData.RelativeHumidity === -99) {
           missingDataStations.push(stationData.StationName);
@@ -323,11 +345,13 @@ async function fetchRainfallData() {
         if (armtsStation) {
           armtsStation.NowPrecipitation = stationData.NowPrecipitation;
           armtsStation.Past1hrPrecipitation = stationData.Past1hrPrecipitation;
+          allStations[stationData.StationId] = armtsStation;
         }
         const mesoStation = mesoStations.find(s => s.StationId === stationData.StationId);
         if (mesoStation) {
           mesoStation.NowPrecipitation = stationData.NowPrecipitation;
           mesoStation.Past1hrPrecipitation = stationData.Past1hrPrecipitation;
+          allStations[stationData.StationId] = mesoStation;
         }
         if (stationData.NowPrecipitation === -998 || stationData.NowPrecipitation === -999 || stationData.NowPrecipitation === null) {
           stationData.NowPrecipitation = 0;
@@ -361,6 +385,9 @@ async function fetchRainfallData() {
           });
           marker.addTo(rainfallLayer);
           stationMarkers[stationData.StationId] = marker;
+          if (!allStations[stationData.StationId]) {
+            allStations[stationData.StationId] = stationData;
+          }
         }
       });
       rainfallData = {
@@ -445,8 +472,8 @@ function renderRainfallSummary() {
   container.innerHTML = `
     <table border="1" style="border-collapse: collapse; width: 100%;">
       <tr><th>測站數量</th><td>${rainfallData.stationCount}</td></tr>
-      <tr><th>日累積雨量</th><td>${rainfallData.highestNowPrecipitation} mm (${rainfallData.highestNowPrecipitationStations.join(', ')})</td></tr>
-      <tr><th>過去1小時雨量</th><td>${rainfallData.highestPast1hrPrecipitation} mm (${rainfallData.highestPast1hrPrecipitationStations.join(', ')})</td></tr>
+      <tr><th>最高日累積雨量</th><td>${rainfallData.highestNowPrecipitation} mm (${rainfallData.highestNowPrecipitationStations.join(', ')})</td></tr>
+      <tr><th>最高過去1小時雨量</th><td>${rainfallData.highestPast1hrPrecipitation} mm (${rainfallData.highestPast1hrPrecipitationStations.join(', ')})</td></tr>
       <tr><th>資料缺失</th><td>${rainfallData.missingDataStations}</td></tr>
       <tr><th>觀測時間</th><td>${rainfallData.observationTime}</td></tr>
     </table>
@@ -515,6 +542,10 @@ document.getElementById('toggle-rainfall').addEventListener('change', function()
   else { map.removeLayer(rainfallLayer); }
 });
 
+document.getElementById('toggle-labels').addEventListener('change', function() {
+  updateLabelsVisibility(this.checked);
+});
+
 async function initializeMap() {
   await fetchArmtsData();
   await fetchMesoData();
@@ -525,6 +556,8 @@ async function initializeMap() {
   renderMesoSummary();
   renderRainfallSummary();
   initAccordion();
+  const showLabels = document.getElementById('toggle-labels').checked;
+  updateLabelsVisibility(showLabels);
   console.log("Data fetched and summaries rendered with layer control!");
 }
 initializeMap();
