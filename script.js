@@ -18,7 +18,6 @@ const drawControl = new L.Control.Draw({
   edit: { featureGroup: drawnItems, remove: true }
 });
 map.addControl(drawControl);
-
 map.on(L.Draw.Event.CREATED, function (event) {
   const layer = event.layer;
   drawnItems.addLayer(layer);
@@ -49,7 +48,23 @@ const rainfallLayer = L.layerGroup().addTo(map);
 
 let armtsStations = [], mesoStations = [], rainfallStations = [];
 let armtsData = {}, mesoData = {}, rainfallData = {};
-const stationMarkers = {}; // 以 StationId 為 key 存 marker 參考
+const stationMarkers = {};
+
+function generatePopupContent(station) {
+  let nowPrecip = (station.NowPrecipitation !== null) ? station.NowPrecipitation : "N/A";
+  let past1hr = (station.Past1hrPrecipitation !== null) ? station.Past1hrPrecipitation : "N/A";
+  return `<strong>${station.StationName} (${station.StationId})</strong><br>
+          溫度: ${station.AirTemperature} °C<br>
+          濕度: ${station.RelativeHumidity}%<br>
+          日累積雨量: ${nowPrecip} mm<br>
+          過去1小時雨量: ${past1hr} mm`;
+}
+
+function generateRainfallPopupContent(station) {
+  return `<strong>${station.StationName} (${station.StationId})</strong><br>
+          日累積雨量: ${station.NowPrecipitation} mm<br>
+          過去1小時雨量: ${station.Past1hrPrecipitation} mm`;
+}
 
 async function fetchArmtsData() {
   try {
@@ -119,16 +134,8 @@ async function fetchArmtsData() {
         if (!observationTime) {
           observationTime = stationData.ObsTime;
         }
-        const initialLabelContent = `<span class="label-line">${stationData.StationName} (${stationData.StationId})</span>
-                                       <span class="label-line">${stationData.AirTemperature} °C</span>
-                                       <span class="label-line humidity">濕度: ${stationData.RelativeHumidity}%</span>`;
-        const tempLabel = L.divIcon({
-          className: 'temperature-label armts',
-          html: initialLabelContent,
-          iconSize: [120, 80],
-          iconAnchor: [60, 40]
-        });
-        const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: tempLabel });
+        const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+        marker.bindPopup(generatePopupContent(stationData));
         marker.addTo(armtsLayer);
         stationMarkers[stationData.StationId] = marker;
       });
@@ -139,7 +146,7 @@ async function fetchArmtsData() {
 
       armtsData = {
         stationCount: stations.length,
-        highestTemp: highestTemp === -Infinity ? "N/A" : highestTemp,
+        highestTemp,
         highestTempStations,
         lowestTemp,
         lowestTempStations,
@@ -228,16 +235,8 @@ async function fetchMesoData() {
           }
         }
         if (!observationTime) { observationTime = stationData.ObsTime; }
-        const initialLabelContent = `<span class="label-line">${stationData.StationName} (${stationData.StationId})</span>
-                                       <span class="label-line">${stationData.AirTemperature} °C</span>
-                                       <span class="label-line humidity">濕度: ${stationData.RelativeHumidity}%</span>`;
-        const tempLabel = L.divIcon({
-          className: 'temperature-label meso',
-          html: initialLabelContent,
-          iconSize: [120, 80],
-          iconAnchor: [60, 40]
-        });
-        const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: tempLabel });
+        const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+        marker.bindPopup(generatePopupContent(stationData));
         marker.addTo(mesoLayer);
         stationMarkers[stationData.StationId] = marker;
       });
@@ -247,7 +246,7 @@ async function fetchMesoData() {
       if (lowestHumidity === Infinity) { lowestHumidity = "N/A"; lowestHumidityStations = ["N/A"]; lowestHumidityTime = "N/A"; }
       mesoData = {
         stationCount: stations.length,
-        highestTemp: highestTemp === -Infinity ? "N/A" : highestTemp,
+        highestTemp,
         highestTempStations,
         lowestTemp,
         lowestTempStations,
@@ -331,15 +330,8 @@ async function fetchRainfallData() {
         }
         if (!observationTime) { observationTime = stationData.ObsTime; }
         if (!stationMarkers[stationData.StationId]) {
-          const rainfallLabel = L.divIcon({
-            className: 'temperature-label rainfall',
-            html: `<span class="label-line">${stationData.StationName} (${stationData.StationId})</span>
-                   <span class="label-line rainfall">日累積雨量: ${stationData.NowPrecipitation} mm</span>
-                   <span class="label-line rainfall">過去1小時雨量: ${stationData.Past1hrPrecipitation} mm</span>`,
-            iconSize: [120, 80],
-            iconAnchor: [60, 40]
-          });
-          const marker = L.marker([stationData.Latitude, stationData.Longitude], { icon: rainfallLabel });
+          const marker = L.marker([stationData.Latitude, stationData.Longitude]);
+          marker.bindPopup(generateRainfallPopupContent(stationData));
           marker.addTo(rainfallLayer);
           stationMarkers[stationData.StationId] = marker;
         }
@@ -362,48 +354,27 @@ async function fetchRainfallData() {
     console.error("Error fetching Rainfall data:", error);
   }
 }
+
 function updateArmtsRainfallLabels() {
   armtsStations.forEach(station => {
     if (station.NowPrecipitation !== null || station.Past1hrPrecipitation !== null) {
-      const rainfallInfo = station.NowPrecipitation !== null ? `<span class="label-line rainfall">即時雨量: ${station.NowPrecipitation} mm</span>` : '';
-      const past1hrInfo = station.Past1hrPrecipitation !== null ? `<span class="label-line rainfall">過去1小時雨量: ${station.Past1hrPrecipitation} mm</span>` : '';
-      const labelContent = `<span class="label-line">${station.StationName} (${station.StationId})</span>
-                            <span class="label-line">${station.AirTemperature} °C</span>
-                            <span class="label-line humidity">濕度: ${station.RelativeHumidity}%</span>
-                            ${rainfallInfo}
-                            ${past1hrInfo}`;
-      const newIcon = L.divIcon({
-        className: 'temperature-label armts',
-        html: labelContent,
-        iconSize: [120, 80],
-        iconAnchor: [60, 40]
-      });
+      const popupContent = generatePopupContent(station);
       const marker = stationMarkers[station.StationId];
-      if (marker) { marker.setIcon(newIcon); }
+      if (marker) { marker.setPopupContent(popupContent); }
     }
   });
 }
+
 function updateMesoRainfallLabels() {
   mesoStations.forEach(station => {
     if (station.NowPrecipitation !== null || station.Past1hrPrecipitation !== null) {
-      const rainfallInfo = station.NowPrecipitation !== null ? `<span class="label-line rainfall">即時雨量: ${station.NowPrecipitation} mm</span>` : '';
-      const past1hrInfo = station.Past1hrPrecipitation !== null ? `<span class="label-line rainfall">過去1小時雨量: ${station.Past1hrPrecipitation} mm</span>` : '';
-      const labelContent = `<span class="label-line">${station.StationName} (${station.StationId})</span>
-                            <span class="label-line">${station.AirTemperature} °C</span>
-                            <span class="label-line humidity">濕度: ${station.RelativeHumidity}%</span>
-                            ${rainfallInfo}
-                            ${past1hrInfo}`;
-      const newIcon = L.divIcon({
-        className: 'temperature-label meso',
-        html: labelContent,
-        iconSize: [120, 80],
-        iconAnchor: [60, 40]
-      });
+      const popupContent = generatePopupContent(station);
       const marker = stationMarkers[station.StationId];
-      if (marker) { marker.setIcon(newIcon); }
+      if (marker) { marker.setPopupContent(popupContent); }
     }
   });
 }
+
 function renderArmtsSummary() {
   const container = document.getElementById('armts-summary-content');
   container.innerHTML = `
@@ -418,6 +389,7 @@ function renderArmtsSummary() {
     </table>
   `;
 }
+
 function renderMesoSummary() {
   const container = document.getElementById('meso-summary-content');
   container.innerHTML = `
@@ -432,18 +404,20 @@ function renderMesoSummary() {
     </table>
   `;
 }
+
 function renderRainfallSummary() {
   const container = document.getElementById('rainfall-summary-content');
   container.innerHTML = `
     <table border="1" style="border-collapse: collapse; width: 100%;">
       <tr><th>測站數量</th><td>${rainfallData.stationCount}</td></tr>
       <tr><th>日累積雨量</th><td>${rainfallData.highestNowPrecipitation} mm (${rainfallData.highestNowPrecipitationStations.join(', ')})</td></tr>
-      <tr><th>1小時累積雨量</th><td>${rainfallData.highestPast1hrPrecipitation} mm (${rainfallData.highestPast1hrPrecipitationStations.join(', ')})</td></tr>
+      <tr><th>1小時雨量</th><td>${rainfallData.highestPast1hrPrecipitation} mm (${rainfallData.highestPast1hrPrecipitationStations.join(', ')})</td></tr>
       <tr><th>資料缺失</th><td>${rainfallData.missingDataStations}</td></tr>
       <tr><th>觀測時間</th><td>${rainfallData.observationTime}</td></tr>
     </table>
   `;
 }
+
 function initAccordion() {
   const toggles = document.querySelectorAll('.accordion-toggle');
   toggles.forEach(btn => {
@@ -454,6 +428,7 @@ function initAccordion() {
     });
   });
 }
+
 function searchStation() {
   const searchTerm = document.getElementById('search-box').value.toLowerCase();
   let found = false;
@@ -491,6 +466,7 @@ document.getElementById('search-button').addEventListener('click', searchStation
 document.getElementById('search-box').addEventListener('keypress', function(event) {
   if (event.key === "Enter") { event.preventDefault(); searchStation(); }
 });
+
 document.getElementById('toggle-armts').addEventListener('change', function() {
   if (this.checked) { map.addLayer(armtsLayer); }
   else { map.removeLayer(armtsLayer); }
