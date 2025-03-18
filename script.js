@@ -251,8 +251,8 @@ async function fetchMesoData() {
           ObsTime: station.ObsTime.DateTime,
           AirTemperature: parseFloat(station.WeatherElement.AirTemperature),
           RelativeHumidity: parseFloat(station.WeatherElement.RelativeHumidity),
-          Latitude: parseFloat(station.GeoInfo.Coordinates[0].StationLatitude),
-          Longitude: parseFloat(station.GeoInfo.Coordinates[0].StationLongitude),
+          Latitude: parseFloat(station.GeoInfo.Coordinates[1].StationLatitude),
+          Longitude: parseFloat(station.GeoInfo.Coordinates[1].StationLongitude),
           NowPrecipitation: null,
           Past1hrPrecipitation: null,
           Source: 'MESO'
