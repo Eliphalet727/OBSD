@@ -121,7 +121,7 @@ function updateLabelsVisibility(visible) {
 
 async function fetchArmtsData() {
   try {
-    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=rdec-key-123-45678-011121314&format=JSON');
+    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWA-8C514C02-902A-4A8C-9B43-E5941B7AAB1D&format=JSON');
     const data = await response.json();
     if (data.success === "true") {
       const stations = data.records.Station;
@@ -231,7 +231,7 @@ async function fetchArmtsData() {
 
 async function fetchMesoData() {
   try {
-    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=rdec-key-123-45678-011121314&format=JSON');
+    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWA-8C514C02-902A-4A8C-9B43-E5941B7AAB1D&format=JSON');
     const data = await response.json();
     if (data.success === "true") {
       const stations = data.records.Station;
@@ -338,7 +338,7 @@ async function fetchMesoData() {
 
 async function fetchRainfallData() {
   try {
-    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=rdec-key-123-45678-011121314&format=JSON');
+    const response = await fetch('https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0002-001?Authorization=CWA-8C514C02-902A-4A8C-9B43-E5941B7AAB1D&format=JSON');
     const data = await response.json();
     if (data.success === "true") {
       const stations = data.records.Station;
